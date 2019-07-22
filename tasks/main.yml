@@ -1,18 +1,12 @@
 ---
 # asible.web_stack/tasks/main.yml
 - import_tasks: include-vars.yml
-  tags: ['web_stack']
+  tags: ['web_stack_deployment']
 
-# http installation
-- import_tasks: httpd.yml
-  tags: ['web_stack','web_stack.httpd']
-
-# filesystem preparation
-- import_tasks: php.yml
-  tags: ['web_stack','web_stack.php']
-
-
-
-
-
+# Deploy Websites
+- name: Deploy websites
+  include_tasks: deploy.yml
+  with_items: "{{ web_stack_deployment_websites }}"
+  loop_control:
+    loop_var: vhost
 ...

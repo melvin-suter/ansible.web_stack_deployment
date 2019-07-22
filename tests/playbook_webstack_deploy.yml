@@ -4,8 +4,7 @@
   hosts: 
   - web.example.com
   roles:
-    - role: melvin_suter.webstack
+    - role: melvin_suter.web_stack_depoyment
   vars:
-    httpd_server_admin: root@localhost
 
 ...

@@ -1,59 +1,68 @@
-ServerRoot "/etc/httpd"
+<VirtualHost *:80>
+    ServerName {{ vhost.domainname }} 
 
-Include conf.modules.d/*.conf
-User {{ httpd_user }}
-Group {{ httpd_group }}
+{% if vhost.alias is defined %}
+{% for alias in vhost.aliases %}
+    ServerName {{ alias }}
+{% endfor %}
+{% endif %}
 
-ServerAdmin {{ httpd_server_admin }}
+    <Directory "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/www/public/.well-known/acme-challenge/">
+        Options None
+        AllowOverride None
+        ForceType text/plain
+        RedirectMatch 404 "^(?!/\.well-known/acme-challenge/[\w-]{43}$)"
+    </Directory>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^.well-known/acme-challenge [NC]
+    RewriteCond %{HTTPS} off
+    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+</VirtualHost>
 
-<Directory />
-    AllowOverride none
-    Require all denied
-</Directory>
+<VirtualHost *:443>
+    ServerName {{ vhost.domainname }}
 
-<IfModule dir_module>
-    DirectoryIndex index.php index.html 
-</IfModule>
+{% if vhost.alias is defined %}
+{% for alias in vhost.aliases %}
+    ServerName {{ alias }}
+{% endfor %}
+{% endif %}
 
-<Files ".ht*">
-    Require all denied
-</Files>
+    DocumentRoot {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/www/public
+    ErrorLog /var/log/httpd/{{ vhost.domainname }}_error.log
+    CustomLog /var/log/httpd/{{ vhost.domainname }}_haccess.log combined
 
-
-ErrorLog "{{httpd_dir_logs}}/logs/error_log"
-LogLevel warn
-
-<IfModule log_config_module>
-    LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
-    LogFormat "%h %l %u %t \"%r\" %>s %b" common
-
-    <IfModule logio_module>
-
-      LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
-    </IfModule>
-
-
-    CustomLog "{{httpd_dir_logs}}/logs/access_log" combined
-</IfModule>
-
-
-<IfModule mime_module>
-    TypesConfig /etc/mime.types
-
-    AddType application/x-compress .Z
-    AddType application/x-gzip .gz .tgz
+    SSLEngine on
+    SSLCertificateFile {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/cert.pem
+    SSLCertificateKeyFile {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/key.pem
+    SSLCertificateChainFile {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/fullchain.pem
 
 
+    <Directory {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/www/public>
+        DirectoryIndex index.html index.php
+        Options -Indexes +FollowSymLinks +MultiViews
+        AllowOverride All
+        Require all granted
 
-    AddType text/html .shtml
-    AddOutputFilter INCLUDES .shtml
-</IfModule>
-AddDefaultCharset UTF-8
+        <Files .user.ini>
+            Order allow,deny
+            Deny from all
+        </Files>
+    </Directory>
 
-<IfModule mime_magic_module>
-    MIMEMagicFile conf/magic
-</IfModule>
-EnableSendfile on
-IncludeOptional conf.d/*.conf
+    <FilesMatch \.php$>
+        SetHandler "proxy:unix:{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/bin/php-fpm.socket|fcgi://localhost/"
+    </FilesMatch>
 
-IncludeOptional {{ httpd_conf_dir }}/*.conf
+{% for db in vhost.databases %}
+{% if db.env == "yes" %}
+
+    SetEnv DATABASE_{{ db.env_name }}_HOST 'localhost'
+    SetEnv DATABASE_{{ db.env_name }}_NAME '{{ db.name }}'
+    SetEnv DATABASE_{{ db.env_name }}_USER '{{ db.user }}'
+    SetEnv DATABASE_{{ db.env_name }}_PASSWORD '{{ db.pssword }}'
+
+{% endif %}
+{% endfor %}
+
+</VirtualHost>

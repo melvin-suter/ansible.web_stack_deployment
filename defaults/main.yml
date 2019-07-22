@@ -1,33 +1,7 @@
 ---
 
-
-# --- webstack ---
-webstack_handle_selinux: true
-
-
 # --- httpd ---
-httpd_create_user: true
-httpd_server_admin: root@localhost
-
-
-# --- php ---
-  
-php_packages:
-- php
-- php-cli
-- php-fpm
-- php-pdo
-- php-mcrypt
-- php-gd
-- php-curl
-- php-mysql
-- php-pecl-zip
-- php-mysqlnd
-- php-yaml
-
-php_versions:
-- 56
-- 72
-- 73
-
+deployment_use_selinux: yes
+php_socket_folder: /var/run/php
+letsencrypt_mail: letsencrypt@example.com 
 ...
