@@ -1,0 +1,37 @@
+---
+
+###############
+# GIT Repo
+###############
+
+- name: Remove Document Root
+  file:
+    state: absent
+    path: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/www"
+  when: "vhost.use_git == true"
+
+
+- name: Deploy Git Repo
+  git:
+    repo: "{{ vhost.git_repo }}"
+    dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/www"
+    clone: yes
+    update: yes
+  when: "vhost.use_git == true"
+
+- name: Change owner of Document Root
+  file:
+    state: directory
+    path: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/www"
+    owner: "{{ httpd_user }}"
+    group: "{{ httpd_group }}"
+    recurse: yes
+  when: "vhost.use_git == true"
+
+
+- name: Apply SELinux context
+  command: restorecon -irv {{ httpd_dir_vhosts }}/{{ vhost.domainname }}
+  when: "deployment_use_selinux == 'yes'"
+
+
+...

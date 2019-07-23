@@ -1,0 +1,58 @@
+---
+
+###############
+#   SymLinks
+###############
+
+
+- name: Create self-signed ssl Symlink
+  file:
+    state: link
+    force: yes
+    src: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_{{ item }}.pem"
+    dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/{{ item }}.pem"
+    owner: "{{ httpd_user }}"
+    group: "{{ httpd_group }}"
+  with_items:
+  - cert
+  - privkey
+  - fullchain
+
+- name: Create PHP Symlink
+  file:
+    state: link
+    force: yes
+    src: "{{ php_socket_folder }}/php{{ vhost.phpversion }}-fpm.socket"
+    dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/bin/php-fpm.socket"
+    owner: "{{ httpd_user }}"
+    group: "{{ httpd_group }}"
+
+
+- name: Create errorlog Symlink
+  file:
+    state: link
+    force: yes
+    src: "/var/log/httpd/{{ vhost.domainname }}_error.log"
+    dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/logs/error.log"
+    owner: root
+    group: root
+
+- name: Create accesslog Symlink
+  file:
+    state: link
+    force: yes
+    src: "/var/log/httpd/{{ vhost.domainname }}_access.log"
+    dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/logs/access.log"
+    owner: root
+    group: root
+
+- name: Symlink httpd config
+  file:
+    state: link
+    force: yes
+    src: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/config/httpd.conf"
+    dest: "{{ httpd_dir_conf }}/{{ vhost.domainname }}.conf"
+    owner: root 
+    group: root
+
+...

@@ -1,0 +1,35 @@
+---
+
+###############
+#  letsencrypt
+###############
+
+- name: Restart httpd
+  systemd:
+    name: httpd
+    state: restarted
+
+- name: Create Certificates
+  command: certbot certonly --agree-tos --apache --cert-name {{ vhost.domainname }} --email {{ letsencrypt_mail }} -n -d {{ vhost.domainname }} {{ vhost.aliases | map('regex_replace', '^(.*)$', '-d \1') | join(' ') }}
+
+# '
+  
+- name: Create letsencrypt Symlink
+  file:
+    state: link
+    force: yes
+    src: "/etc/letsencrypt/live/{{ vhost.domainname }}/{{ item }}.pem"
+    dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/{{ item }}.pem"
+    owner: "{{ httpd_user }}"
+    group: "{{ httpd_group }}"
+  with_items:
+  - cert
+  - privkey
+  - fullchain
+
+- name: Restart httpd
+  systemd:
+    name: httpd
+    state: restarted
+
+...

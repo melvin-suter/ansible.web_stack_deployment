@@ -1,133 +1,16 @@
 ---
 
-- name: Create directoryies
-  file:
-    state: directory
-    path: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/{{ item.dir }}"
-    owner: "{{ item.owner }}"
-    group: "{{ item.group }}"
-    mode: '0750'
-    recurse: yes
-  with_items: "{{ httpd_vhost_dirs }}"
+- import_tasks: sub_tasks/preq.yml
+  tags: ['web_stack_deployment','web_stack_deployment.preq']
 
-- name: Set SELinux context
-  sefcontext:
-    target: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/{{ item.dir }}(/.*)?"
-    setype: "{{ item.context }}"
-    state: present
-  with_items: "{{ httpd_vhost_dirs }}"
-  when: "deployment_use_selinux == 'yes'"
+- import_tasks: sub_tasks/symlink.yml
+  tags: ['web_stack_deployment','web_stack_deployment.symlink'] 
 
-- name: Apply SELinux context
-  command: restorecon -irv {{ httpd_dir_vhosts }}/{{ vhost.domainname }}
-  when: "deployment_use_selinux == 'yes'"
+- import_tasks: sub_tasks/letsencrypt.yml
+  tags: ['web_stack_deployment','web_stack_deployment.letsencrypt']
 
-
-- name: Create self-signed certificate, if configured.
-  command: >
-    openssl req -x509 -nodes -subj '/CN={{ vhost.domainname }}' -days 365 -newkey rsa:4096 -sha256 -keyout {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_key.pem -out {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_cert.pem creates={{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_cert.pem
-
-- name: Create fullchain
-  shell: "cat {{ item }} >> {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_fullchain.pem"
-  with_items:
-  - "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_cert.pem"
-  - "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_key.pem"
-
-- name: Create httpd config
-  template:
-    src: "templates/httpd.conf.j2"
-    dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/config/httpd.conf"
-    owner: root
-    group: root
-    mode: '0640'
-
-
-
-
-
-###############
-#   SymLinks
-###############
-
-
-- name: Create self-signed ssl Symlink
-  file:
-    state: link
-    force: yes
-    src: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_{{ item }}.pem"
-    dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/{{ item }}.pem"
-    owner: "{{ httpd_user }}"
-    group: "{{ httpd_group }}"
-  with_items:
-  - cert
-  - key
-  - fullchain
-
-- name: Create PHP Symlink
-  file:
-    state: link
-    force: yes
-    src: "{{ php_socket_folder }}/php{{ vhost.phpversion }}-fpm.socket"
-    dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/bin/php-fpm.socket"
-    owner: "{{ httpd_user }}"
-    group: "{{ httpd_group }}"
-
-
-- name: Create errorlog Symlink
-  file:
-    state: link
-    force: yes
-    src: "/var/log/httpd/{{ vhost.domainname }}_error.log"
-    dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/logs/error.log"
-    owner: root
-    group: root
-
-- name: Create accesslog Symlink
-  file:
-    state: link
-    force: yes
-    src: "/var/log/httpd/{{ vhost.domainname }}_access.log"
-    dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/logs/access.log"
-    owner: root
-    group: root
-
-- name: Symlink httpd config
-  file:
-    state: link
-    force: yes
-    src: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/config/httpd.conf"
-    dest: "{{ httpd_dir_conf }}/{{ vhost.domainname }}.conf"
-    owner: root 
-    group: root
-
-
-###############
-# httpd & SSL
-###############
-
-- name: Restart httpd
-  systemd:
-    name: httpd
-    state: restarted
-
-- name: Create Certificates
-  command: certbot certonly --agree-tos --apache --cert-name {{ vhost.domainname }} --email {{ letsencrypt_mail }} -n -d {{ vhost.domainname }} {{ vhost.aliases | map('regex_replace', '^(.*)$', '-d \1') | join(' ') }}
-  
-- name: Create letsencrypt Symlink
-  file:
-    state: link
-    force: yes
-    src: "/etc/letsencrypt/live/{{ vhost.domainname }}/{{ item }}.pem"
-    dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/{{ item }}.pem"
-    owner: "{{ httpd_user }}"
-    group: "{{ httpd_group }}"
-  with_items:
-  - cert
-  - key
-  - fullchain
-
-
-
+- import_tasks: sub_tasks/git.yml
+  tags: ['web_stack_deployment','web_stack_deployment.git']
 
 ###############
 #  CONFIG
@@ -138,5 +21,4 @@
     content: "{{ vhost | to_nice_yaml(indent=2) }}"
     dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/config/ansible.yml"
 
-#/etc/letsencrypt/live/the-bass.ch/fullchain
 ...

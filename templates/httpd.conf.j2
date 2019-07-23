@@ -30,11 +30,11 @@
 
     DocumentRoot {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/www/public
     ErrorLog /var/log/httpd/{{ vhost.domainname }}_error.log
-    CustomLog /var/log/httpd/{{ vhost.domainname }}_haccess.log combined
+    CustomLog /var/log/httpd/{{ vhost.domainname }}_access.log combined
 
     SSLEngine on
     SSLCertificateFile {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/cert.pem
-    SSLCertificateKeyFile {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/key.pem
+    SSLCertificateKeyFile {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/privkey.pem
     SSLCertificateChainFile {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/fullchain.pem
 
 

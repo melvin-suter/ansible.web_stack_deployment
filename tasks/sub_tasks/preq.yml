@@ -1,0 +1,35 @@
+---
+
+###############
+#   Preq
+###############
+
+- name: Create directoryies
+  file:
+    state: directory
+    path: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/{{ item.dir }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: '0750'
+    recurse: yes
+  with_items: "{{ httpd_vhost_dirs }}"
+
+- name: Create self-signed certificate, if configured.
+  command: >
+    openssl req -x509 -nodes -subj '/CN={{ vhost.domainname }}' -days 365 -newkey rsa:4096 -sha256 -keyout {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_privkey.pem -out {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_cert.pem creates={{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_cert.pem
+
+- name: Create fullchain
+  shell: "cat {{ item }} >> {{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_fullchain.pem"
+  with_items:
+  - "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_cert.pem"
+  - "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/ssl/sesi_privkey.pem"
+
+- name: Create httpd config
+  template:
+    src: "templates/httpd.conf.j2"
+    dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/config/httpd.conf"
+    owner: root
+    group: root
+    mode: '0640'
+
+...
