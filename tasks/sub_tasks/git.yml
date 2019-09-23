@@ -29,6 +29,17 @@
     recurse: yes
   when: "vhost.use_git == true"
 
+- name: Check if ansible_deploy exists 
+  stat:
+    path: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/www/ansible_deploy.sh" 
+  register: ansible_deploy_stat
+
+- name: Run ansible_deploy 
+  command: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/www/ansible_deploy.sh"
+  args:
+    chdir: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/www/"
+  when: ansible_deploy_stat.stat.exists == False 
+
 
 - name: Apply SELinux context
   command: restorecon -irv {{ httpd_dir_vhosts }}/{{ vhost.domainname }}
