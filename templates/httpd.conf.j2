@@ -1,7 +1,7 @@
 <VirtualHost *:80>
     ServerName {{ vhost.domainname }} 
 
-{% if vhost.aliases is defined and vhost.aliases | length > 0 %}
+{% if vhost.aliases is defined %}
 {% for alias in vhost.aliases %}
     ServerName {{ alias }}
 {% endfor %}
@@ -22,7 +22,7 @@
 <VirtualHost *:443>
     ServerName {{ vhost.domainname }}
 
-{% if vhost.aliases is defined and vhost.aliases | length > 0 %}
+{% if vhost.aliases is defined %}
 {% for alias in vhost.aliases %}
     ServerName {{ alias }}
 {% endfor %}
