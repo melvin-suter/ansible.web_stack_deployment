@@ -17,6 +17,7 @@
     dest: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/www"
     clone: yes
     update: yes
+    key_file: "{{ webstack_deployment_gitkey }}"
   when: "vhost.use_git == true"
 
 - name: Change owner of Document Root
