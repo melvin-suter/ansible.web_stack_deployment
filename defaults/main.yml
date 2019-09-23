@@ -4,4 +4,5 @@
 deployment_use_selinux: yes
 php_socket_folder: /var/run/php
 letsencrypt_mail: letsencrypt@example.com 
+webstack_deployment_letsencrypt: yes
 ...
