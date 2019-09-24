@@ -10,8 +10,12 @@
   tags: ['web_stack_deployment','web_stack_deployment.letsencrypt']
   when: webstack_deployment_letsencrypt == true
 
+- import_tasks: sub_tasks/database.yml
+  tags: ['web_stack_deployment','web_stack_deployment.database']
+
 - import_tasks: sub_tasks/git.yml
   tags: ['web_stack_deployment','web_stack_deployment.git']
+
 
 ###############
 #  CONFIG
