@@ -3,7 +3,7 @@
 
 {% if vhost.aliases is defined %}
 {% for alias in vhost.aliases %}
-    ServerName {{ alias }}
+    ServerAlias {{ alias }}
 {% endfor %}
 {% endif %}
 
@@ -24,7 +24,7 @@
 
 {% if vhost.aliases is defined %}
 {% for alias in vhost.aliases %}
-    ServerName {{ alias }}
+    ServerAlias {{ alias }}
 {% endfor %}
 {% endif %}
 
