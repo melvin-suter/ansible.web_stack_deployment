@@ -51,7 +51,7 @@
     </Directory>
 
     <FilesMatch \.php$>
-        SetHandler "proxy:unix:{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/bin/php-fpm.socket|fcgi://localhost/"
+        SetHandler "proxy:unix:/var/run/php/php{{ vhost.phpversion }}-fpm.socket|fcgi://localhost/"
     </FilesMatch>
 
 {% for db in vhost.databases %}
