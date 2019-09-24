@@ -38,6 +38,7 @@
   command: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/www/ansible_deploy.sh"
   args:
     chdir: "{{ httpd_dir_vhosts }}/{{ vhost.domainname }}/www/"
+  ignore_errors: yes
   when: ansible_deploy_stat.stat.exists == True
 
 
