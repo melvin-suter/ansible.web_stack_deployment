@@ -9,4 +9,5 @@
   with_items: "{{ web_stack_deployment_websites }}"
   loop_control:
     loop_var: vhost
+  notify: httpd restarted
 ...
